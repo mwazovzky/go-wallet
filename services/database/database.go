@@ -8,9 +8,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const databasePath = "./database/accounts.db"
-
-func InitConnection() (*sql.DB, error) {
+func InitConnection(databasePath string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", databasePath)
 	if err != nil {
 		log.Println("failed to connect to database", err)
@@ -22,10 +20,8 @@ func InitConnection() (*sql.DB, error) {
 func SetupDatabase(db *sql.DB) error {
 	st := `CREATE TABLE IF NOT EXISTS accounts (
 		id INTEGER PRIMARY KEY AUTOINCREMENT, 
-		chain TEXT NOT NULL,
-		address TEXT NOT NULL,
-		password TEXT NOT NULL,
-		UNIQUE(chain,address)
+		address TEXT NOT NULL UNIQUE,
+		password TEXT NOT NULL
 	);`
 
 	_, err := db.Exec(st)

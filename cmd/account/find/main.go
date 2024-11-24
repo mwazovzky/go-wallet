@@ -1,22 +1,22 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
 	"go-wallet/services/database"
 	"go-wallet/services/repository"
 	"go-wallet/services/wallet"
 	"log"
 	"os"
-
-	_ "modernc.org/sqlite"
 )
 
 const databasePath = "./database/ethereum.db"
 const keystorePath = "./keystore"
 
-// go run main.go password
+// go run main.go address
 func main() {
-	password, err := parsePassword()
+	address, err := parseAddress()
 	if err != nil {
 		log.Fatal("missing required arguments")
 	}
@@ -27,31 +27,37 @@ func main() {
 	}
 	defer db.Close()
 
-	database.SetupDatabase(db)
 	ar := repository.NewAccountRepository(db)
 
+	model, err := ar.Find(address)
+	if err != nil {
+		log.Fatal("failed to query data", err)
+	}
+
 	w := wallet.NewWallet(keystorePath)
-	account, err := w.CreateAccount(password)
+	pk, err := w.FindAccount(model.Address, model.Password)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to find account", err)
 	}
 
-	model := repository.Account{
-		Address:  account.Address.Hex(),
-		Password: password,
-	}
+	pkString := privateKeyToHex(pk)
 
-	err = ar.Create(model)
-	if err != nil {
-		log.Fatal("failed to create account record", err)
-	}
+	log.Println(pkString)
 }
 
-func parsePassword() (string, error) {
+func parseAddress() (string, error) {
 	args := os.Args
 	if len(args) < 2 {
 		return "", fmt.Errorf("missing required arguments")
 	}
 
 	return os.Args[1], nil
+}
+
+func privateKeyToHex(pk *ecdsa.PrivateKey) string {
+	pkHex := make([]byte, 32)
+	pkBytes := pk.D.Bytes()
+	copy(pkHex[32-len(pkBytes):], pkBytes)
+
+	return hex.EncodeToString(pkHex)
 }

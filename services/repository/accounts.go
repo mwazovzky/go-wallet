@@ -21,7 +21,7 @@ func NewAccountRepository(db *sql.DB) *AccountRepository {
 }
 
 func (r *AccountRepository) Fetch() ([]Account, error) {
-	query := `SELECT id, chain, address, password FROM accounts;`
+	query := `SELECT id, address, password FROM accounts;`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -33,7 +33,7 @@ func (r *AccountRepository) Fetch() ([]Account, error) {
 
 	for rows.Next() {
 		var account Account
-		err := rows.Scan(&account.ID, &account.Chain, &account.Address, &account.Password)
+		err := rows.Scan(&account.ID, &account.Address, &account.Password)
 		if err != nil {
 			log.Fatal("failed to scan query data", err)
 		}
@@ -43,10 +43,30 @@ func (r *AccountRepository) Fetch() ([]Account, error) {
 	return data, nil
 }
 
-func (r *AccountRepository) Create(account Account) error {
-	statement := `INSERT INTO accounts (chain, address, password) VALUES (?,?,?)`
+func (r *AccountRepository) Find(address string) (*Account, error) {
+	query := `SELECT id, address, password FROM accounts WHERE address=? LIMIT 1;`
 
-	_, err := r.db.Exec(statement, account.Chain, account.Address, account.Password)
+	rows, err := r.db.Query(query, address)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var account Account
+
+	rows.Next()
+	err = rows.Scan(&account.ID, &account.Address, &account.Password)
+	if err != nil {
+		log.Fatal("failed to scan query data", err)
+	}
+
+	return &account, nil
+}
+
+func (r *AccountRepository) Create(account Account) error {
+	statement := `INSERT INTO accounts (address, password) VALUES (?,?)`
+
+	_, err := r.db.Exec(statement, account.Address, account.Password)
 
 	return err
 }
