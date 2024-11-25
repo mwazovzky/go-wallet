@@ -4,15 +4,13 @@ import (
 	"crypto/ecdsa"
 	"encoding/hex"
 	"fmt"
+	"go-wallet/services/config"
 	"go-wallet/services/database"
 	"go-wallet/services/repository"
 	"go-wallet/services/wallet"
 	"log"
 	"os"
 )
-
-const databasePath = "./database/ethereum.db"
-const keystorePath = "./keystore"
 
 // go run main.go address
 func main() {
@@ -21,7 +19,9 @@ func main() {
 		log.Fatal("missing required arguments")
 	}
 
-	db, err := database.InitConnection(databasePath)
+	cfg := config.Load()
+
+	db, err := database.InitConnection(cfg.DatabasePath)
 	if err != nil {
 		log.Fatal("failed to connect to database", err)
 	}
@@ -34,7 +34,7 @@ func main() {
 		log.Fatal("failed to query data", err)
 	}
 
-	w := wallet.NewWallet(keystorePath)
+	w := wallet.NewWallet(cfg.KeystorePath)
 	pk, err := w.FindAccount(model.Address, model.Password)
 	if err != nil {
 		log.Fatal("failed to find account", err)

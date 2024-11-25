@@ -1,15 +1,16 @@
 package main
 
 import (
+	"go-wallet/services/config"
 	"go-wallet/services/database"
 	"go-wallet/services/repository"
 	"log"
 )
 
-const databasePath = "./database/ethereum.db"
-
 func main() {
-	db, err := database.InitConnection(databasePath)
+	cfg := config.Load()
+
+	db, err := database.InitConnection(cfg.DatabasePath)
 	if err != nil {
 		log.Fatal("failed to connect to database", err)
 	}

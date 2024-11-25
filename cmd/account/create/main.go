@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go-wallet/services/config"
 	"go-wallet/services/database"
 	"go-wallet/services/repository"
 	"go-wallet/services/wallet"
@@ -11,9 +12,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const databasePath = "./database/ethereum.db"
-const keystorePath = "./keystore"
-
 // go run main.go password
 func main() {
 	password, err := parsePassword()
@@ -21,7 +19,9 @@ func main() {
 		log.Fatal("missing required arguments")
 	}
 
-	db, err := database.InitConnection(databasePath)
+	cfg := config.Load()
+
+	db, err := database.InitConnection(cfg.DatabasePath)
 	if err != nil {
 		log.Fatal("failed to connect to database", err)
 	}
@@ -30,7 +30,7 @@ func main() {
 	database.SetupDatabase(db)
 	ar := repository.NewAccountRepository(db)
 
-	w := wallet.NewWallet(keystorePath)
+	w := wallet.NewWallet(cfg.KeystorePath)
 	account, err := w.CreateAccount(password)
 	if err != nil {
 		log.Fatal(err)
