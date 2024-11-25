@@ -7,7 +7,6 @@ import (
 
 type Account struct {
 	ID       int64
-	Chain    string
 	Address  string
 	Password string
 }
